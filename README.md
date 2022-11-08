@@ -13,4 +13,4 @@
   - asyncio
   - aiohttp
 
-![image](https://user-images.githubusercontent.com/90411859/200572318-2b324ddf-25d8-4401-a132-570c7666bc6e.png)
+![image](https://user-images.githubusercontent.com/90411859/200572443-245cd0aa-7702-4191-93f5-a8119bd39253.png)
