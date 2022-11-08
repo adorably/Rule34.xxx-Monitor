@@ -1,0 +1,9 @@
+{
+    "discord": {
+        "webhook_url": "",
+        "webhook_username": "Rule34"
+    },
+    "app": {
+        "refresh_time": 30
+    }
+}
