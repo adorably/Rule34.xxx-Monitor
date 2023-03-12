@@ -110,12 +110,12 @@ class Rule34_Main:
                                 split('<div id="paginator">', 1)[0]
                     )
 
-
                     for post in posts.split('<span id="'):
                         if '<div class="image-list">' not in post and 'index.php' in post:
                             id = post.split('"', 1)[0]
                             url = post.split('href="', 1)[1].split('"', 1)[0]
                             thumbnail = post.split('<img src="', 1)[1].split('"', 1)[0]
+
 
                             post_exists = False
                             for i in range(len(data.collected_posts['posts'])):
@@ -144,43 +144,46 @@ class Rule34_Main:
             async with aiohttp.ClientSession() as session:
                 page_results = await scrape_page(0, data.tag_id, session)
                 if page_results and '<h1>Search is overloaded! Try again later...</h1>' not in page_results:
-                    posts = (
-                        page_results.split('<div class="content">', 1)[1].\
-                            split('</div>\n<span data-nosnippet>', 1)[0].\
-                                split('<div id="paginator">', 1)[0]
-                    )
+                    try:
+                        posts = (
+                            page_results.split('<div class="content">', 1)[1].\
+                                split('</div>\n<span data-nosnippet>', 1)[0].\
+                                    split('<div id="paginator">', 1)[0]
+                        )
 
-                    for post in posts.split('<span id="'):
-                        if '<div class="image-list">' not in post and 'index.php' in post:
-                            data.temp_posts['posts'].append(
-                                {
-                                    'id': post.split('"', 1)[0],
-                                    'url': post.split('href="', 1)[1].split('"', 1)[0],
-                                    'thumbnail': post.split('<img src="', 1)[1].split('"', 1)[0]
-                                }
-                            )
+                        for post in posts.split('<span id="'):
+                            if '<div class="image-list">' not in post and 'index.php' in post:
+                                data.temp_posts['posts'].append(
+                                    {
+                                        'id': post.split('"', 1)[0],
+                                        'url': post.split('href="', 1)[1].split('"', 1)[0],
+                                        'thumbnail': post.split('<img src="', 1)[1].split('"', 1)[0]
+                                    }
+                                )
 
-                    post_found = False
-                    for i in range(len(data.temp_posts['posts'])):
-                        for x in range(len(data.collected_posts['posts'])):
-                            if data.temp_posts['posts'][i]['id'] == data.collected_posts['posts'][x]['id']:
-                                post_found = True
-                    
-                        if not post_found:
-                            print(f' {system.DEFAULT}[{system.GREEN}{str(datetime.now()).split(".", 1)[0]}{system.DEFAULT}] New Post Found - | URL: [{system.GREEN}https://rule34.xxx/{data.temp_posts["posts"][i]["url"]}{system.DEFAULT}] {system.FLUSH}')
-                            data.collected_posts['posts'].append(
-                                {
-                                    'id': data.temp_posts['posts'][i]['id'],
-                                    'url': data.temp_posts['posts'][i]['url'],
-                                    'thumbnail': data.temp_posts['posts'][i]['thumbnail']
-                                }
-                            )
+                        post_found = False
+                        for i in range(len(data.temp_posts['posts'])):
+                            for x in range(len(data.collected_posts['posts'])):
+                                if data.temp_posts['posts'][i]['id'] == data.collected_posts['posts'][x]['id']:
+                                    post_found = True
 
-                            await self.new_post(data.temp_posts['posts'][i]['url'], data.temp_posts['posts'][i]['thumbnail'], session)
-                            save_posts(f'./post_ids/{data.tag_id} - Post IDs.json');print('')
-                    
-                    
-                    data.temp_posts['posts'].clear()
+                            if not post_found:
+                                print(f' {system.DEFAULT}[{system.GREEN}{str(datetime.now()).split(".", 1)[0]}{system.DEFAULT}] New Post Found - | URL: [{system.GREEN}https://rule34.xxx/{data.temp_posts["posts"][i]["url"]}{system.DEFAULT}] {system.FLUSH}')
+                                data.collected_posts['posts'].append(
+                                    {
+                                        'id': data.temp_posts['posts'][i]['id'],
+                                        'url': data.temp_posts['posts'][i]['url'],
+                                        'thumbnail': data.temp_posts['posts'][i]['thumbnail']
+                                    }
+                                )
+
+                                await self.new_post(data.temp_posts['posts'][i]['url'], data.temp_posts['posts'][i]['thumbnail'], session)
+                                save_posts(f'./post_ids/{data.tag_id} - Post IDs.json');print('')
+
+
+                        data.temp_posts['posts'].clear()
+                    except:
+                        print(f' {system.DEFAULT}[{system.RED}{str(datetime.now()).split(".", 1)[0]}{system.DEFAULT}] Failed to Retrieve Page Results{system.FLUSH}\n')
 
                 else:
                     print(f' {system.DEFAULT}[{system.RED}{str(datetime.now()).split(".", 1)[0]}{system.DEFAULT}] Failed to Retrieve Page Results{system.FLUSH}\n')
@@ -193,30 +196,33 @@ class Rule34_Main:
         post_info = await find_post(post_url, session)
 
         if post_info:
-            if '<li><h6>Artist</h6></li>' in post_info:
-                artists = [
-                    sub.split('?</a>', 1)[1].split('>', 1)[1].split('</a>', 1)[0].strip() 
-                    for sub in post_info.split('<li><h6>Artist</h6></li>', 1)[1].split('<li><h6>General</h6></li>', 1)[0].split('<li class="tag-type-artist tag">') 
-                        if 'index.php?' in sub
-                ]
-            else:
-                artists = []
+            try:
+                if '<li><h6>Artist</h6></li>' in post_info:
+                    artists = [
+                        sub.split('?</a>', 1)[1].split('>', 1)[1].split('</a>', 1)[0].strip() 
+                        for sub in post_info.split('<li><h6>Artist</h6></li>', 1)[1].split('<li><h6>General</h6></li>', 1)[0].split('<li class="tag-type-artist tag">') 
+                            if 'index.php?' in sub
+                    ]
+                else:
+                    artists = []
 
-            if 'li><h6>Character</h6></li>' in post_info:
-                characters = [
-                    sub.split('?</a>', 1)[1].split('>', 1)[1].split('</a>', 1)[0].strip()
-                    for sub in post_info.split('li><h6>Character</h6></li>', 1)[1].split(('<li><h6>Artist</h6></li>' if '<li><h6>Artist</h6></li>' in post_info else '<li><h6>General</h6></li>'), 1)[0].split('<li class="tag-type-character tag">')
-                        if 'index.php?' in sub
-                ]
-            else:
-                characters = []
+                if 'li><h6>Character</h6></li>' in post_info:
+                    characters = [
+                        sub.split('?</a>', 1)[1].split('>', 1)[1].split('</a>', 1)[0].strip()
+                        for sub in post_info.split('li><h6>Character</h6></li>', 1)[1].split(('<li><h6>Artist</h6></li>' if '<li><h6>Artist</h6></li>' in post_info else '<li><h6>General</h6></li>'), 1)[0].split('<li class="tag-type-character tag">')
+                            if 'index.php?' in sub
+                    ]
+                else:
+                    characters = []
 
-            media_link = post_info.split('<div class="link-list">\n<h5>Options</h5>')[1].split('Original image', 1)[0].\
-                split('<a href="https://', 1)[1].split('"')[0]
+                media_link = post_info.split('<div class="link-list">\n<h5>Options</h5>')[1].split('Original image', 1)[0].\
+                    split('<a href="https://', 1)[1].split('"')[0]
 
-            media_type = media_link.split('images', 1)[1].split('.', 1)[1].split('?', 1)[0]
-
-            await notify(post_url, post_thumbnail, artists, characters, f'https://{media_link}', media_type, session)
+                media_type = media_link.split('images', 1)[1].split('.', 1)[1].split('?', 1)[0]
+            
+                await notify(post_url, post_thumbnail, artists, characters, f'https://{media_link}', media_type, session)
+            except:
+                print(f' {system.DEFAULT}[{system.RED}{str(datetime.now()).split(".", 1)[0]}{system.DEFAULT}] Failed to Retrieve Page Info for New Post{system.FLUSH}\n')
         else:
             print(f' {system.DEFAULT}[{system.RED}{str(datetime.now()).split(".", 1)[0]}{system.DEFAULT}] Failed to Retrieve Page Info for New Post{system.FLUSH}\n')
 
